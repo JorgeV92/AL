@@ -74,3 +74,81 @@ static void LeftRotate(rb_tree_t* tree, rb_node_t* x) {
     y->left = x;
     x->parent = y;
 }
+
+static void RightRotate(rb_tree_t* tree, rb_node_t* y) {
+    rb_node_t* x = y->left;
+
+    y->left = x->right;
+    if (x->right != tree->nil) {
+        x->right->parent = y;
+    }
+
+    x->parent = y->parent;
+    if (y->parent == tree->nil) {
+        tree->root = x;
+    } else if (y == y->parent->left) {
+        y->parent->left = x;
+    } else {
+        y->parent->right = x;
+    }
+
+    x->right = y;
+    y->parent = x;
+}
+
+static void InsertFixup(rb_tree_t* tree, rb_node_t* node) {
+    while (node->parent->color == RB_RED) {
+        if (node->parent == node->parent->parent->left) {
+            rb_node_t* uncle = node->parent->parent->right;
+            if (uncle->color == RB_RED) {
+                node->parent->color = RB_BLACK;
+                uncle->color = RB_BLACK;
+                node->parent->parent->color = RB_RED;
+                node = node->parent->parent;
+            } else {
+                if (node == node->parent->right) {
+                    node = node->parent;
+                    LeftRotate(tree, node);
+                }
+                node->parent->color = RB_BLACK;
+                node->parent->parent->color = RB_RED;
+                RightRotate(tree, node->parent->parent);
+            }
+        } else {
+            rb_node_t* uncle = node->parent->parent->left;
+            if (uncle->color == RB_RED) {
+                node->parent->color = RB_BLACK;
+                uncle->parent->color = RB_BLACK;
+                node->parent->parent->color = RB_RED;
+                node = node->parent->parent;
+            } else {
+                if (node == node->parent->left) {
+                    node = node->parent;
+                    RightRotate(tree, node);
+                }
+                node->parent->color = RB_BLACK;
+                node->parent->parent->color = RB_RED;
+                LeftRotate(tree, node->parent->parent);
+            }
+        }
+    }
+
+    tree->root->color = RB_BLACK;
+}
+
+static rb_node_t* FindNode(const rb_tree_t* tree, int key) {
+    rb_node_t* curr = tree->root;
+
+    while (curr != tree->nil) {
+        if (key < curr->key) {
+            curr = curr->left;
+        } else if (key > curr->key) {
+            curr = curr->right;
+        } else {
+            return curr;
+        }
+    }
+
+    return tree->nil;
+}
+
